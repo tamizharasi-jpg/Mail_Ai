@@ -282,6 +282,19 @@ async def export_csv(client_id: str = Query("anonymous")) -> StreamingResponse:
     )
 
 
+@api.get("/download/documentation")
+async def download_documentation() -> StreamingResponse:
+    """Download the MailMind AI project documentation as a DOCX file."""
+    doc_path = os.path.join(os.path.dirname(__file__), "..", "MailMind_AI_Project_Documentation.docx")
+    if not os.path.exists(doc_path):
+        raise HTTPException(status_code=404, detail="Documentation file not found.")
+    return StreamingResponse(
+        open(doc_path, "rb"),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="MailMind_AI_Project_Documentation.docx"'},
+    )
+
+
 app.include_router(api)
 app.add_middleware(CORSMiddleware, allow_credentials=True, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
