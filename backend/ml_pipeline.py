@@ -1,20 +1,33 @@
-"""MailMind's reproducible classical ML + feature engineering pipeline."""
+"""MailMind's reproducible classical ML + feature engineering pipeline.
+
+The spam classifier uses the pre-trained model from ``models/best_spam_model.joblib``
+(trained on the UCI SMS Spam Collection via ``scripts/train_models.py``).  If the
+serialized model is unavailable, the pipeline falls back to a small seed corpus so
+the API can always start.
+"""
 from __future__ import annotations
 
 import html
-import math
+import json
+import logging
 import re
-from collections import Counter
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+import joblib
 import numpy as np
 from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
+
+logger = logging.getLogger("mailmind.pipeline")
+
+_MODEL_DIR = Path(__file__).resolve().parent.parent / "models"
+_SPAM_MODEL_PATH = _MODEL_DIR / "best_spam_model.joblib"
+_METRICS_PATH = _MODEL_DIR / "training_metrics.json"
 
 
 SPAM_TRAINING = [
@@ -125,7 +138,7 @@ def extract_features(sender: str, subject: str, body: str) -> dict[str, Any]:
 @dataclass
 class ModelBundle:
     spam_vectorizer: TfidfVectorizer
-    spam_model: LogisticRegression
+    spam_model: Any  # Pre-trained model (NB, LR, SVM, RF, etc.)
     category_vectorizer: TfidfVectorizer
     category_model: LogisticRegression
     intent_vectorizer: TfidfVectorizer
@@ -134,33 +147,58 @@ class ModelBundle:
 
 
 class MailMindPipeline:
-    model_version = "mailmind-classical-v1.0"
+    model_version = "mailmind-classical-v2.0"
     feature_version = "features-v1.0"
 
     def __init__(self) -> None:
         self.bundle = self._train()
 
+    def _load_pretrained_spam(self) -> tuple[TfidfVectorizer, Any, dict[str, Any]] | None:
+        """Try to load the serialized model trained on the full dataset."""
+        if not _SPAM_MODEL_PATH.exists():
+            return None
+        try:
+            bundle = joblib.load(_SPAM_MODEL_PATH)
+            vectorizer = bundle["vectorizer"]
+            model = bundle["model"]
+            model_name = bundle.get("model_name", "unknown")
+            metrics: dict[str, Any] = {}
+            if _METRICS_PATH.exists():
+                metrics = json.loads(_METRICS_PATH.read_text(encoding="utf-8"))
+            logger.info("Loaded pre-trained spam model: %s", model_name)
+            return vectorizer, model, metrics
+        except Exception as exc:
+            logger.warning("Could not load pre-trained model (%s), falling back to seed corpus.", exc)
+            return None
+
     def _train(self) -> ModelBundle:
-        spam_text, spam_labels = zip(*SPAM_TRAINING)
-        spam_vectorizer = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, min_df=1)
-        X = spam_vectorizer.fit_transform(spam_text)
-        model = LogisticRegression(max_iter=500, class_weight="balanced", random_state=7)
-        model.fit(X, spam_labels)
-        baseline = MultinomialNB().fit(X, spam_labels)
-        y_true = list(spam_labels)
-        y_pred = model.predict(X)
-        comparison = {
-            "logisticRegression": self._metrics(y_true, y_pred),
-            "naiveBayes": self._metrics(y_true, baseline.predict(X)),
-            "evaluationNote": "Training-corpus metrics are diagnostic; add a licensed external dataset for holdout reporting.",
-        }
+        # --- Spam model: prefer pre-trained, fallback to seed ---
+        pretrained = self._load_pretrained_spam()
+        if pretrained:
+            spam_vectorizer, spam_model, comparison = pretrained
+        else:
+            spam_text, spam_labels = zip(*SPAM_TRAINING)
+            spam_vectorizer = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, min_df=1)
+            X = spam_vectorizer.fit_transform(spam_text)
+            spam_model = LogisticRegression(max_iter=500, class_weight="balanced", random_state=7)
+            spam_model.fit(X, spam_labels)
+            baseline = MultinomialNB().fit(X, spam_labels)
+            y_true = list(spam_labels)
+            y_pred = spam_model.predict(X)
+            comparison = {
+                "logisticRegression": self._metrics(y_true, y_pred),
+                "naiveBayes": self._metrics(y_true, baseline.predict(X)),
+                "evaluationNote": "Seed-corpus diagnostic metrics. Run scripts/train_models.py for held-out evaluation.",
+            }
+
+        # --- Category and intent: lightweight seed classifiers ---
         cat_text, cat_labels = zip(*CATEGORY_TRAINING)
         cat_vectorizer = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True)
         cat_model = LogisticRegression(max_iter=600, random_state=7).fit(cat_vectorizer.fit_transform(cat_text), cat_labels)
         intent_text, intent_labels = zip(*INTENT_TRAINING)
         intent_vectorizer = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True)
         intent_model = LogisticRegression(max_iter=600, random_state=7).fit(intent_vectorizer.fit_transform(intent_text), intent_labels)
-        return ModelBundle(spam_vectorizer, model, cat_vectorizer, cat_model, intent_vectorizer, intent_model, comparison)
+        return ModelBundle(spam_vectorizer, spam_model, cat_vectorizer, cat_model, intent_vectorizer, intent_model, comparison)
 
     @staticmethod
     def _metrics(y_true: list[str], y_pred: list[str]) -> dict[str, float]:

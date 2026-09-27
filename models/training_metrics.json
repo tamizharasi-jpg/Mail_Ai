@@ -1,15 +1,252 @@
 {
-  "logisticRegression": {
-    "accuracy": 1.0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "f1": 1.0
+  "dataset": {
+    "source": "UCI SMS Spam Collection v1",
+    "url": "https://archive.ics.uci.edu/dataset/228/sms+spam+collection",
+    "license": "CC BY 4.0",
+    "total_messages": 5158,
+    "train_size": 3610,
+    "validation_size": 774,
+    "test_size": 774,
+    "split_ratio": "70/15/15",
+    "stratified": true,
+    "random_state": 42
   },
-  "naiveBayes": {
-    "accuracy": 1.0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "f1": 1.0
+  "vectorizer": {
+    "type": "TfidfVectorizer",
+    "ngram_range": [
+      1,
+      2
+    ],
+    "max_features": 15000,
+    "vocabulary_size": 8884,
+    "sublinear_tf": true
   },
-  "evaluationNote": "Training-corpus metrics are diagnostic; add a licensed external dataset for holdout reporting."
+  "best_model": "multinomial_naive_bayes",
+  "models": {
+    "multinomial_naive_bayes": {
+      "accuracy": 0.9832,
+      "precision": 0.9882,
+      "recall": 0.875,
+      "f1": 0.9282,
+      "confusion_matrix": {
+        "labels": [
+          "ham",
+          "spam"
+        ],
+        "matrix": [
+          [
+            677,
+            1
+          ],
+          [
+            12,
+            84
+          ]
+        ],
+        "true_negatives": 677,
+        "false_positives": 1,
+        "false_negatives": 12,
+        "true_positives": 84
+      },
+      "roc_auc": 0.9917,
+      "pr_auc": 0.9761,
+      "validation_metrics": {
+        "accuracy": 0.9858,
+        "precision": 0.9778,
+        "recall": 0.9072,
+        "f1": 0.9412,
+        "confusion_matrix": {
+          "labels": [
+            "ham",
+            "spam"
+          ],
+          "matrix": [
+            [
+              675,
+              2
+            ],
+            [
+              9,
+              88
+            ]
+          ],
+          "true_negatives": 675,
+          "false_positives": 2,
+          "false_negatives": 9,
+          "true_positives": 88
+        },
+        "roc_auc": 0.9883,
+        "pr_auc": 0.9662
+      }
+    },
+    "logistic_regression": {
+      "accuracy": 0.9832,
+      "precision": 0.9192,
+      "recall": 0.9479,
+      "f1": 0.9333,
+      "confusion_matrix": {
+        "labels": [
+          "ham",
+          "spam"
+        ],
+        "matrix": [
+          [
+            670,
+            8
+          ],
+          [
+            5,
+            91
+          ]
+        ],
+        "true_negatives": 670,
+        "false_positives": 8,
+        "false_negatives": 5,
+        "true_positives": 91
+      },
+      "roc_auc": 0.9978,
+      "pr_auc": 0.9868,
+      "validation_metrics": {
+        "accuracy": 0.9806,
+        "precision": 0.91,
+        "recall": 0.9381,
+        "f1": 0.9239,
+        "confusion_matrix": {
+          "labels": [
+            "ham",
+            "spam"
+          ],
+          "matrix": [
+            [
+              668,
+              9
+            ],
+            [
+              6,
+              91
+            ]
+          ],
+          "true_negatives": 668,
+          "false_positives": 9,
+          "false_negatives": 6,
+          "true_positives": 91
+        },
+        "roc_auc": 0.994,
+        "pr_auc": 0.9714
+      }
+    },
+    "random_forest": {
+      "accuracy": 0.9845,
+      "precision": 1.0,
+      "recall": 0.875,
+      "f1": 0.9333,
+      "confusion_matrix": {
+        "labels": [
+          "ham",
+          "spam"
+        ],
+        "matrix": [
+          [
+            678,
+            0
+          ],
+          [
+            12,
+            84
+          ]
+        ],
+        "true_negatives": 678,
+        "false_positives": 0,
+        "false_negatives": 12,
+        "true_positives": 84
+      },
+      "roc_auc": 0.9976,
+      "pr_auc": 0.9849,
+      "validation_metrics": {
+        "accuracy": 0.9793,
+        "precision": 0.988,
+        "recall": 0.8454,
+        "f1": 0.9111,
+        "confusion_matrix": {
+          "labels": [
+            "ham",
+            "spam"
+          ],
+          "matrix": [
+            [
+              676,
+              1
+            ],
+            [
+              15,
+              82
+            ]
+          ],
+          "true_negatives": 676,
+          "false_positives": 1,
+          "false_negatives": 15,
+          "true_positives": 82
+        },
+        "roc_auc": 0.9869,
+        "pr_auc": 0.9636
+      }
+    },
+    "linear_svm": {
+      "accuracy": 0.9871,
+      "precision": 0.93,
+      "recall": 0.9688,
+      "f1": 0.949,
+      "confusion_matrix": {
+        "labels": [
+          "ham",
+          "spam"
+        ],
+        "matrix": [
+          [
+            671,
+            7
+          ],
+          [
+            3,
+            93
+          ]
+        ],
+        "true_negatives": 671,
+        "false_positives": 7,
+        "false_negatives": 3,
+        "true_positives": 93
+      },
+      "roc_auc": 0.9878,
+      "pr_auc": 0.9781,
+      "validation_metrics": {
+        "accuracy": 0.978,
+        "precision": 0.9082,
+        "recall": 0.9175,
+        "f1": 0.9128,
+        "confusion_matrix": {
+          "labels": [
+            "ham",
+            "spam"
+          ],
+          "matrix": [
+            [
+              668,
+              9
+            ],
+            [
+              8,
+              89
+            ]
+          ],
+          "true_negatives": 668,
+          "false_positives": 9,
+          "false_negatives": 8,
+          "true_positives": 89
+        },
+        "roc_auc": 0.9854,
+        "pr_auc": 0.9665
+      }
+    }
+  },
+  "evaluation_note": "All test metrics are computed on a held-out 15% stratified test split never seen during training or validation."
 }

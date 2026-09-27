@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import csv
+import io
 import json
 import logging
 import os
@@ -10,6 +12,7 @@ from typing import Any
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
 
@@ -216,6 +219,67 @@ async def analytics(client_id: str = Query("anonymous")) -> dict[str, Any]:
     labels = [r.get("analysis", {}).get("spam", {}).get("label", "") for r in records]
     priorities = [r.get("analysis", {}).get("priority", {}).get("label", "") for r in records]
     return {"total": len(records), "spam": labels.count("Spam"), "suspicious": labels.count("Suspicious") + labels.count("Phishing Risk"), "legitimate": labels.count("Legitimate"), "priorityDistribution": {p: priorities.count(p) for p in {"Critical", "High", "Medium", "Low", "Informational"}}, "modelVersion": pipeline.model_version}
+
+
+@api.get("/emails/export-csv")
+async def export_csv(client_id: str = Query("anonymous")) -> StreamingResponse:
+    """Export every analyzed email as a downloadable CSV file."""
+    records = await db.email_analyses.find(
+        {"client_id": client_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(5000)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "Subject",
+        "Sender",
+        "Source",
+        "Date",
+        "Spam Label",
+        "Spam Confidence",
+        "Phishing Risk",
+        "Phishing Confidence",
+        "Category",
+        "Category Confidence",
+        "Priority",
+        "Intent",
+        "Action Required",
+        "Summary",
+    ])
+
+    for rec in records:
+        a = rec.get("analysis", {})
+        spam = a.get("spam", {})
+        phishing = a.get("phishing", {})
+        category = a.get("category", {})
+        priority = a.get("priority", {})
+        intent = a.get("intent", {})
+        writer.writerow([
+            rec.get("subject", ""),
+            rec.get("sender", ""),
+            rec.get("source_name", ""),
+            rec.get("created_at", ""),
+            spam.get("label", ""),
+            round(spam.get("probability", 0), 4),
+            phishing.get("risk", ""),
+            round(phishing.get("probability", 0), 4),
+            category.get("label", ""),
+            round(category.get("probability", 0), 4),
+            priority.get("label", ""),
+            intent.get("label", ""),
+            "Yes" if intent.get("actionRequired") else "No",
+            a.get("summary", ""),
+        ])
+
+    buf.seek(0)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"mailmind_export_{timestamp}.csv"
+
+    return StreamingResponse(
+        buf,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 app.include_router(api)

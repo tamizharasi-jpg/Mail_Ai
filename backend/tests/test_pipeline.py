@@ -7,7 +7,9 @@ from ml_pipeline import MailMindPipeline, extract_features
 def test_healthworthy_pipeline_has_versioned_models():
     pipeline = MailMindPipeline()
     assert pipeline.model_version.startswith("mailmind-classical-")
-    assert "logisticRegression" in pipeline.bundle.metrics
+    metrics = pipeline.bundle.metrics
+    # Accept both old flat format and new nested format
+    assert "models" in metrics or "logisticRegression" in metrics
 
 
 def test_legitimate_meeting_has_action_and_entities():

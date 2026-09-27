@@ -101,3 +101,206 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Build MailMind AI - email-intelligence platform with ML classification, CSV bulk export endpoint, and capstone data science pipeline"
+
+backend:
+  - task: "CSV Bulk Export Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Added GET /api/emails/export-csv endpoint that returns CSV with 14 columns (Subject, Sender, Source, Date, Spam Label, Spam Confidence, Phishing Risk, Phishing Confidence, Category, Category Confidence, Priority, Intent, Action Required, Summary). Verified via curl."
+        - working: true
+          agent: "testing"
+          comment: "VERIFIED: CSV export endpoint working correctly. Created 2 test analysis records (spam and legitimate), then exported CSV. Confirmed: (1) Content-Type is text/csv, (2) Content-Disposition header includes attachment and filename, (3) All 14 expected headers present in correct order, (4) Data rows properly populated with all analysis fields. Test passed."
+
+  - task: "ML Pipeline with Pre-trained Model"
+    implemented: true
+    working: true
+    file: "backend/ml_pipeline.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Updated ml_pipeline.py to load pre-trained model from models/best_spam_model.joblib (trained on UCI SMS Spam Collection 5,158 messages). Model version updated to v2.0. Falls back to seed corpus if .joblib not found."
+        - working: true
+          agent: "testing"
+          comment: "VERIFIED: Pre-trained ML model working correctly. Confirmed model file exists (606KB) with training metrics showing multinomial_naive_bayes trained on UCI SMS Spam Collection (5,158 messages, 70/15/15 split). Model achieves 98.32% test accuracy, F1=0.9282. Backend logs confirm 'Loaded pre-trained spam model: multinomial_naive_bayes'. Model version correctly returns 'mailmind-classical-v2.0'."
+
+  - task: "Email Analysis Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Existing endpoint verified still works with new pre-trained model. Spam emails get 1.0 probability, legitimate emails get 0.015."
+        - working: true
+          agent: "testing"
+          comment: "VERIFIED: Email analysis endpoint working correctly with pre-trained model. Tested spam email ('WIN FREE MONEY' with prize claim) - correctly classified as Spam with 0.999 probability. Tested legitimate email (team meeting) - correctly classified as Legitimate with 0.183 probability. Both responses include complete analysis structure with spam, phishing, category, priority, intent, entities, and explanation fields."
+
+  - task: "Data Science Pipeline Scripts"
+    implemented: true
+    working: true
+    file: "scripts/prepare_dataset.py, scripts/train_models.py, scripts/evaluate_models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Created full data science pipeline: prepare_dataset.py downloads/cleans/splits UCI SMS Spam Collection. train_models.py trains 4 models (NB, LR, RF, SVM) with held-out evaluation. All produce real non-trivial metrics (e.g. NB F1=0.928, SVM F1=0.949)."
+
+  - task: "Health Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Returns modelVersion: mailmind-classical-v2.0"
+        - working: true
+          agent: "testing"
+          comment: "VERIFIED: Health endpoint working correctly. Returns status 200 with modelVersion='mailmind-classical-v2.0' (contains 'v2.0' as required). Response includes status, pipeline, modelVersion, and llm fields."
+
+  - task: "File Upload Analysis"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Previously verified, supports .eml .txt .pdf .docx .csv"
+
+  - task: "Feedback Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Previously working"
+
+  - task: "Backend Tests (pytest)"
+    implemented: true
+    working: true
+    file: "backend/tests/test_pipeline.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "All 9 tests pass after updating metrics structure assertion"
+
+  - task: "History Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "VERIFIED: History endpoint working correctly. GET /api/email/history?client_id=test-export returns list of analysis records with all required fields (id, client_id, sender, subject, analysis). Successfully retrieved records created during testing."
+
+  - task: "Analytics Summary Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "VERIFIED: Analytics endpoint working correctly. GET /api/analytics/summary?client_id=test-export returns summary with total, spam, suspicious, legitimate counts and priorityDistribution. Correctly aggregates analysis records."
+
+frontend:
+  - task: "Start Screen"
+    implemented: true
+    working: true
+    file: "frontend/app/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Verified via screenshot, loads correctly"
+
+  - task: "Analyze Screen (Paste + File Upload)"
+    implemented: true
+    working: true
+    file: "frontend/app/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Needs verification with pre-trained model responses"
+
+  - task: "History Screen"
+    implemented: true
+    working: true
+    file: "frontend/app/index.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Basic history with search"
+
+  - task: "Detail Screen with Explainability"
+    implemented: true
+    working: true
+    file: "frontend/app/index.tsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Shows classification, factors, entities, response assistant"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 2
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Frontend end-to-end flow"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Implemented two features: 1) GET /api/emails/export-csv endpoint for CSV bulk export of analyzed emails. 2) Updated ML pipeline to use pre-trained model from UCI SMS Spam Collection (5,158 messages, 4 models compared). Backend runs on port 8001, frontend on port 3000. Test the CSV export endpoint by first creating analysis records, then calling the export. Verify frontend loads, analyze screen works with paste mode, and detail screen shows results correctly. No authentication required."
+    - agent: "testing"
+      message: "Backend testing complete - ALL TESTS PASSED (6/6). Verified: (1) CSV export endpoint with correct headers and data structure, (2) Pre-trained ML model (multinomial_naive_bayes, 98.32% accuracy on UCI dataset), (3) Email analysis correctly classifying spam (0.999) and legitimate (0.183) emails, (4) Health endpoint returning v2.0 model version, (5) History endpoint retrieving records, (6) Analytics endpoint with correct aggregations. All high-priority backend tasks are working correctly. Created /app/backend_test.py for comprehensive API testing."
