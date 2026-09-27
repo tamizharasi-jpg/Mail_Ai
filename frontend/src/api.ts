@@ -17,7 +17,9 @@ export type Analysis = {
 
 export type RecordItem = { id: string; sender: string; subject: string; source_name: string; created_at: string; analysis: Analysis };
 
-const baseUrl = String(Constants.expoConfig?.extra?.backendUrl ?? process.env.EXPO_PUBLIC_BACKEND_URL ?? "").replace(/\/$/, "");
+export type BatchResult = { items: RecordItem[]; errors: { file: string; error: string }[]; completed: number; total: number; summary: { spam: number; suspicious: number; highPriority: number; actionRequired: number } };
+
+const baseUrl = String(Constants.expoConfig?.extra?.backendUrl ?? process.env.EXPO_PUBLIC_BACKEND_URL ?? process.env.EXPO_BACKEND_URL ?? "").replace(/\/$/, "");
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${baseUrl}/api${path}`, options);
@@ -38,7 +40,7 @@ export async function analyzeFile(asset: { uri: string; name: string; mimeType?:
   } else {
     form.append("file", { uri: asset.uri, name: asset.name, type: asset.mimeType || "application/octet-stream" } as unknown as Blob);
   }
-  return request<RecordItem>(`/email/analyze-file?client_id=${encodeURIComponent(clientId)}`, { method: "POST", body: form });
+  return request<BatchResult>(`/email/analyze-file?client_id=${encodeURIComponent(clientId)}`, { method: "POST", body: form });
 }
 
 export function getHistory(clientId: string, search = "") {

@@ -132,12 +132,29 @@ async def analyze_email(input_data: EmailInput) -> dict[str, Any]:
     return await analyze_one(input_data)
 
 
+def _summarize(items: list[dict[str, Any]]) -> dict[str, int]:
+    return {
+        "spam": sum(i["analysis"]["spam"]["label"] == "Spam" for i in items),
+        "suspicious": sum(i["analysis"]["spam"]["label"] in {"Suspicious", "Phishing Risk"} for i in items),
+        "highPriority": sum(i["analysis"]["priority"]["label"] in {"Critical", "High"} for i in items),
+        "actionRequired": sum(i["analysis"]["intent"]["actionRequired"] for i in items),
+    }
+
+
+async def _analyze_parsed(entries: list[dict[str, Any]], client_id: str, source_name: str) -> list[dict[str, Any]]:
+    results: list[dict[str, Any]] = []
+    for index, fields in enumerate(entries, start=1):
+        label = source_name if len(entries) == 1 else f"{source_name} · email {index}"
+        results.append(await analyze_one(EmailInput(**fields, client_id=client_id, source_name=label)))
+    return results
+
+
 @api.post("/email/analyze-file")
 async def analyze_file(file: UploadFile = File(...), client_id: str = Query("anonymous")) -> dict[str, Any]:
     try:
         data = await file.read()
-        fields = parse_upload(file.filename or "email.txt", data)
-        return await analyze_one(EmailInput(**fields, client_id=client_id, source_name=file.filename or "uploaded-file"))
+        entries = parse_upload(file.filename or "email.txt", data)
+        results = await _analyze_parsed(entries, client_id, file.filename or "uploaded-file")
     except HTTPException:
         raise
     except ValueError as exc:
@@ -145,20 +162,22 @@ async def analyze_file(file: UploadFile = File(...), client_id: str = Query("ano
     except Exception as exc:
         logger.exception("File extraction failed")
         raise HTTPException(status_code=422, detail="We could not safely extract text from that file.") from exc
+    return {"items": results, "errors": [], "completed": len(results), "total": len(results), "summary": _summarize(results)}
 
 
 @api.post("/email/analyze-batch")
 async def analyze_batch(files: list[UploadFile] = File(...), client_id: str = Query("anonymous")) -> dict[str, Any]:
     if len(files) > 50:
         raise HTTPException(status_code=413, detail="Analyze up to 50 files per batch.")
-    results, errors = [], []
+    results: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
     for file in files:
         try:
-            fields = parse_upload(file.filename or "email.txt", await file.read())
-            results.append(await analyze_one(EmailInput(**fields, client_id=client_id, source_name=file.filename or "uploaded-file")))
+            entries = parse_upload(file.filename or "email.txt", await file.read())
+            results.extend(await _analyze_parsed(entries, client_id, file.filename or "uploaded-file"))
         except Exception as exc:
             errors.append({"file": file.filename or "unknown", "error": str(exc)})
-    return {"items": results, "errors": errors, "completed": len(results), "total": len(files), "summary": {"spam": sum(i["analysis"]["spam"]["label"] == "Spam" for i in results), "highPriority": sum(i["analysis"]["priority"]["label"] in {"Critical", "High"} for i in results), "actionRequired": sum(i["analysis"]["intent"]["actionRequired"] for i in results)}}
+    return {"items": results, "errors": errors, "completed": len(results), "total": len(results) + len(errors), "summary": _summarize(results)}
 
 
 @api.get("/email/history")
@@ -185,7 +204,9 @@ async def save_feedback(record_id: str, feedback: FeedbackInput) -> dict[str, st
     allowed = {"spam", "category", "priority", "intent"}
     if feedback.field not in allowed:
         raise HTTPException(status_code=422, detail="Unsupported correction field.")
-    await db.email_analyses.update_one({"id": record_id, "client_id": feedback.client_id}, {"$push": {"feedback": {"field": feedback.field, "correctedValue": feedback.corrected_value, "createdAt": now_iso()}}})
+    result = await db.email_analyses.update_one({"id": record_id, "client_id": feedback.client_id}, {"$push": {"feedback": {"field": feedback.field, "correctedValue": feedback.corrected_value, "createdAt": now_iso()}}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Analysis not found.")
     return {"status": "saved"}
 
 
