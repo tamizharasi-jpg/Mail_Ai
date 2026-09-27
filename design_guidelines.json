@@ -1,0 +1,148 @@
+{
+  "app_name": "MailMind AI",
+  "personality": "7 Dark-First Utility DARK",
+  "personality_one_liner": "A precision intelligence console for email triage, threat detection, and machine learning explainability.",
+  "color": {
+    "surface": "#0E1116",
+    "onSurface": "#F0F4F8",
+    "surfaceSecondary": "#161B22",
+    "onSurfaceSecondary": "#C9D1D9",
+    "surfaceTertiary": "#21262D",
+    "onSurfaceTertiary": "#8B949E",
+    "surfaceInverse": "#F0F4F8",
+    "onSurfaceInverse": "#0E1116",
+    "brand": "#FF5722",
+    "brandPrimary": "#FF5722",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#F4511E",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#2A1810",
+    "onBrandTertiary": "#FFAB91",
+    "success": "#238636",
+    "onSuccess": "#FFFFFF",
+    "warning": "#D29922",
+    "onWarning": "#0E1116",
+    "error": "#F85149",
+    "onError": "#FFFFFF",
+    "info": "#388BFd",
+    "onInfo": "#FFFFFF",
+    "border": "#30363D",
+    "borderStrong": "#FF5722",
+    "divider": "#21262D",
+    "muted": "#8B949E",
+    "onBrand": "#FFFFFF"
+  },
+  "typography": {
+    "displayFontFamily": "Barlow Condensed",
+    "textFontFamily": "Satoshi",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Clean operational rhythm with precise padding and sticky action bars",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": 0,
+  "navigation": "bottom_tabs",
+  "icon_set": "MaterialCommunityIcons",
+  "glassmorphism": {
+    "enabled": false,
+    "do's": [
+      "Use high contrast dividers and sharp borders",
+      "Prioritize data density and glanceability"
+    ],
+    "dont's": [
+      "Avoid heavy blur on high density metrics screens",
+      "Avoid low contrast text"
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Start",
+      "purpose": "Animated cursor grid start screen with system intelligence status and direct launch into inbox intelligence.",
+      "states": {
+        "loading": "Initializing ML inference pipeline...",
+        "empty": "No models loaded",
+        "error": "Failed to initialize neural state"
+      },
+      "layout": "Full-bleed dark terminal aesthetic with animated pulsing grid, live feature weights ticker, and prominent orange primary CTA."
+    },
+    {
+      "name": "Inbox",
+      "purpose": "Command center for incoming emails categorized by priority, intent, and threat score.",
+      "states": {
+        "loading": "Scanning mail stream...",
+        "empty": "Inbox fully sanitized. No priority emails pending.",
+        "error": "Failed to sync secure mailbox stream."
+      },
+      "layout": "Vertical scrollable list with filter chips (All, Priority, Phishing Alert, Action Required), threat badge indicators, and quick action row."
+    },
+    {
+      "name": "Analyze",
+      "purpose": "Paste raw text or upload .eml, .txt, .pdf, .docx files for deep NLP and TF-IDF classical ML inference.",
+      "states": {
+        "loading": "Extracting features & running model inference...",
+        "empty": "Paste or upload an email payload to initiate pipeline.",
+        "error": "File extraction or model inference failed."
+      },
+      "layout": "Tabbed input interface (Paste Text / File Drop), feature configuration toggles, and sticky 'Run ML Analysis' button."
+    },
+    {
+      "name": "Detail",
+      "purpose": "Explainable AI analysis results showing classification, TF-IDF feature weights, phishing indicators, and AI response assistant.",
+      "states": {
+        "loading": "Synthesizing explainable AI factors...",
+        "empty": "No analysis record selected.",
+        "error": "Failed to retrieve inference breakdown."
+      },
+      "layout": "Structured modular card layout with top threat gauge, model probability distribution bars, SHAP/LIME feature weight breakdown, and generated response actions."
+    },
+    {
+      "name": "History",
+      "purpose": "Browse past email analyses, classification logs, and saved response drafts.",
+      "states": {
+        "loading": "Querying analysis database...",
+        "empty": "No past analysis logs found.",
+        "error": "Failed to load historical database."
+      },
+      "layout": "Chronological card list with search filter, status tags (Spam, Safe, Priority), and quick review actions."
+    }
+  ],
+  "images": {
+    "hero_backdrop": {
+      "url": "https://images.unsplash.com/photo-1635776062360-af423602aff3",
+      "dark": "https://images.unsplash.com/photo-1635776062360-af423602aff3",
+      "alt": "Abstract cyber security gradient background"
+    }
+  },
+  "instructions_to_main_agent": "Ensure absolute adherence to Dark-First Utility persona. Use Barlow Condensed for numerical metrics and timers, Satoshi for body text. Implement all 5 core screens (Start, Inbox, Analyze, Detail, History) with robust Loading, Empty, and Error states. Ensure sticky primary CTA on Analyze and Detail screens. Strictly enforce zero tolerance for indigo/purple/blue/navy hues and emojis."
+}

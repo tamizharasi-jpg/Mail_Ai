@@ -1,0 +1,15 @@
+{
+  "logisticRegression": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "naiveBayes": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "evaluationNote": "Training-corpus metrics are diagnostic; add a licensed external dataset for holdout reporting."
+}

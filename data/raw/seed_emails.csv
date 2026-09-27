@@ -1,0 +1,11 @@
+text,label
+"Congratulations you have won a cash prize claim your reward now",spam
+"You have been selected for a free gift click to claim",spam
+"Limited offer buy now and save money today",spam
+"Your account qualifies for an exclusive bonus act immediately",spam
+"Team standup is moved to tomorrow at ten",ham
+"Please review the attached project plan before our meeting",ham
+"Your interview is scheduled for next Tuesday",ham
+"Thanks for sending the quarterly report",ham
+"The invoice for this month is ready in the finance portal",ham
+"Can we catch up for coffee this weekend",ham
