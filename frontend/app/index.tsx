@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -51,10 +52,67 @@ export default function Index() {
 
 function StartScreen({ onStart }: { onStart: () => void }) {
   const styles = useStyles(); const { colors } = useTheme(); const insets = useSafeAreaInsets();
-  return <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]} testID="app-start"><CursorGrid /><View style={start.content}>
-    <View style={[start.mark, { borderColor: colors.brand }]}><Icon name="radar" color={colors.brand} size={28} /></View><Text style={styles.eyebrow}>MAILMIND / INTELLIGENCE CONSOLE</Text><Text style={[start.title, { color: colors.onSurface }]}>MailMind<Text style={{ color: colors.brand }}> AI</Text></Text><Text style={[styles.body, start.subtitle]}>Understand your emails.{"\n"}Prioritize what matters. Respond intelligently.</Text>
-    <View style={[start.status, { borderColor: colors.border, backgroundColor: colors.surfaceSecondary }]}><View style={[start.live, { backgroundColor: colors.success }]} /><Text style={styles.muted}>ML INFERENCE PIPELINE READY</Text></View><Pressable testID="start-button" accessibilityRole="button" onPress={onStart} style={({ pressed }) => [styles.primary, start.button, pressed && { opacity: 0.82, transform: [{ scale: 0.98 }] }]}><Text style={styles.primaryText}>Start analyzing</Text><Icon name="arrow-right" color={colors.onBrandPrimary} size={19} /></Pressable>
-  </View><Text style={[styles.muted, start.footer]}>TF-IDF · FEATURE ENGINEERING · EXPLAINABLE AI</Text></View>;
+
+  // Glass-card style — backdrop-filter applied on web only
+  const glassCard = useMemo(() => ({
+    width: "100%" as const,
+    maxWidth: 460,
+    alignItems: "center" as const,
+    backgroundColor: colors.surfaceSecondary + "E8",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 24,
+    paddingHorizontal: 28,
+    paddingVertical: 36,
+    overflow: "hidden" as const,
+    ...(Platform.OS === "web"
+      ? ({ backdropFilter: "blur(22px)", WebkitBackdropFilter: "blur(22px)" } as object)
+      : {}),
+  }), [colors]);
+
+  return (
+    <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom }]} testID="app-start">
+      {/* Interactive canvas background (web) / pulsing grid (native) */}
+      <CursorGrid
+        color={colors.brand}
+        cellSize={58}
+        radius={190}
+        maxOpacity={0.65}
+        gridOpacity={0.05}
+        fillOpacity={0.05}
+        clickPulse
+      />
+
+      {/* Radial vignette: darken top + bottom edges for readability */}
+      <LinearGradient
+        colors={[colors.surface + "CC", "transparent", colors.surface + "CC"]}
+        locations={[0, 0.45, 1]}
+        style={[StyleSheet.absoluteFill, { pointerEvents: "none" }]}
+      />
+
+      {/* Hero glass card */}
+      <View style={[start.content, { pointerEvents: "box-none" } as any]}>
+        <View style={glassCard}>
+          <View style={[start.mark, { borderColor: colors.brand + "55", backgroundColor: colors.brandTertiary }]}>
+            <Icon name="radar" color={colors.brand} size={28} />
+          </View>
+          <Text style={[styles.eyebrow, { marginTop: 2 }]}>MAILMIND / INTELLIGENCE CONSOLE</Text>
+          <Text style={[start.title, { color: colors.onSurface }]}>MailMind<Text style={{ color: colors.brand }}> AI</Text></Text>
+          <Text style={[styles.body, start.subtitle]}>Understand your emails.{"\n"}Prioritize what matters. Respond intelligently.</Text>
+          <View style={[start.status, { borderColor: colors.success + "55", backgroundColor: colors.success + "14" }]}>
+            <View style={[start.live, { backgroundColor: colors.success }]} />
+            <Text style={[styles.muted, { color: colors.success }]}>ML INFERENCE PIPELINE READY</Text>
+          </View>
+          <Pressable testID="start-button" accessibilityRole="button" onPress={onStart} style={({ pressed }) => [styles.primary, start.button, pressed && { opacity: 0.82, transform: [{ scale: 0.98 }] }]}>
+            <Text style={styles.primaryText}>Start analyzing</Text>
+            <Icon name="arrow-right" color={colors.onBrandPrimary} size={19} />
+          </Pressable>
+        </View>
+      </View>
+
+      <Text style={[styles.muted, start.footer]}>TF-IDF · FEATURE ENGINEERING · EXPLAINABLE AI</Text>
+    </View>
+  );
 }
 
 function NavItem({ active, label, icon, onPress }: { active: boolean; label: string; icon: string; onPress: () => void }) { const { colors } = useTheme(); return <Pressable testID={`nav-${label.toLowerCase()}`} accessibilityRole="tab" onPress={onPress} style={({ pressed }) => [local.navItem, pressed && { opacity: 0.65 }]}><Icon name={icon} color={active ? colors.brand : colors.muted} size={22} /><Text style={[local.navText, { color: active ? colors.brand : colors.muted }]}>{label}</Text></Pressable>; }
@@ -80,7 +138,16 @@ function EmailRow({ item, onPress }: { item: RecordItem; onPress: () => void }) 
 function EmptyState({ title, body }: { title: string; body: string }) { const styles = useStyles(); const { colors } = useTheme(); return <View style={styles.empty}><View style={styles.emptyIcon}><Icon name="email-outline" color={colors.brand} size={25} /></View><Text style={styles.h2}>{title}</Text><Text style={[styles.body, { textAlign: "center", marginTop: 8, maxWidth: 280 }]}>{body}</Text></View>; }
 
 const local = StyleSheet.create({ badge: { borderWidth: 1, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 5 }, badgeText: { fontSize: 11, fontWeight: "800" }, navItem: { flex: 1, alignItems: "center", minHeight: 58, gap: 4 }, navText: { fontSize: 11, fontWeight: "700" } });
-const start = StyleSheet.create({ content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 24 }, mark: { width: 66, height: 66, borderWidth: 1, borderRadius: 18, alignItems: "center", justifyContent: "center", marginBottom: 22 }, title: { fontSize: 52, fontWeight: "900", letterSpacing: -2, marginTop: 10 }, subtitle: { textAlign: "center", marginTop: 16, lineHeight: 24 }, status: { flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, marginTop: 28 }, live: { width: 7, height: 7, borderRadius: 4 }, button: { width: "100%", marginTop: 34 }, footer: { textAlign: "center", letterSpacing: 1, marginBottom: 12 } });
+const start = StyleSheet.create({
+  content:  { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 20 },
+  mark:     { width: 66, height: 66, borderWidth: 1, borderRadius: 18, alignItems: "center", justifyContent: "center", marginBottom: 20 },
+  title:    { fontSize: 52, fontWeight: "900", letterSpacing: -2, marginTop: 10 },
+  subtitle: { textAlign: "center", marginTop: 14, lineHeight: 24 },
+  status:   { flexDirection: "row", alignItems: "center", gap: 8, borderWidth: 1, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 9, marginTop: 26 },
+  live:     { width: 7, height: 7, borderRadius: 4 },
+  button:   { width: "100%", marginTop: 30 },
+  footer:   { textAlign: "center", letterSpacing: 1, marginBottom: 14 },
+});
 
 function AnalyzeScreen({ clientId, onComplete }: { clientId: string; onComplete: (items: RecordItem[]) => void }) {
   const styles = useStyles(); const { colors } = useTheme(); const [mode, setMode] = useState<"paste" | "file">("paste"); const [sender, setSender] = useState(""); const [subject, setSubject] = useState(""); const [body, setBody] = useState(""); const [loading, setLoading] = useState(false); const [progress, setProgress] = useState({ done: 0, total: 0, emails: 0 }); const [error, setError] = useState(""); const [summary, setSummary] = useState("");
